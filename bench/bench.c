@@ -72,9 +72,11 @@ int main(int argc,char** argv)
 {
 	long int count;
 
+	int threads;
+
 	srand(time(NULL));
 	if (argc < 4) {
-		fprintf(stderr,"Usage: db-bench <write | read> <count>\n");
+		fprintf(stderr,"Usage: db-bench <write | read | readwrite> <count> <threads>\n");
 		exit(1);
 	}
 	
@@ -96,9 +98,11 @@ int main(int argc,char** argv)
 		if (argc == 5)
 			r = 1;
 		
-		_read_test(count, r);
+		_read_test(count, r); //readwrite
 	}else if (strcmp(argv[1], "readwrite") == 0) {
 		int r = 0;
+
+		threads = atoi(argv[3]);
 
 		count = atoi(argv[2]);
 		_print_header(count);
@@ -109,7 +113,7 @@ int main(int argc,char** argv)
 		_read_test(count, r);
 
 	} else {
-		fprintf(stderr,"Usage: db-bench <write | read> <count> <random>\n");
+		fprintf(stderr,"Usage: db-bench <write | read | readwrite> <count> <threads> <random>\n");
 		exit(1);
 	}
 
