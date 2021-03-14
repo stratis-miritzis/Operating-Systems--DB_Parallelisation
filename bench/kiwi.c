@@ -5,7 +5,7 @@
 
 #define DATAS ("testdb")
 
-void _write_test(long int count, int r)
+void _write_test(long int count, int r, int threadcount)
 {
 	int i;
 	double cost;
@@ -59,8 +59,19 @@ void _write_test(long int count, int r)
 		,cost);	
 }
 
-void _read_test(long int count, int r)
+void _read_test(long int count, int r, int threadcount)
 {
+	pthread_t *threads;
+	threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
+
+	typedef struct ARGS{
+		DB *db;
+		Variant *sk;
+		Variant *sv;
+	}args;
+	args arg;
+	//arg = (args*) malloc(sizeof(args));
+
 	int i;
 	int ret;
 	int found = 0;
@@ -73,6 +84,7 @@ void _read_test(long int count, int r)
 
 	db = db_open(DATAS);
 	start = get_ustime_sec();
+
 	for (i = 0; i < count; i++) {
 		memset(key, 0, KSIZE + 1);
 
@@ -84,14 +96,27 @@ void _read_test(long int count, int r)
 		fprintf(stderr, "%d searching %s\n", i, key);
 		sk.length = KSIZE;
 		sk.mem = key;
-		ret = db_get(db, &sk, &sv);
+		
+
+
+		arg.db = db;
+		arg.sk = &sk;
+		arg.sv = &sv;
+
+		pthread_create(&threads[i],NULL,db_get,(void*)&arg);
+
+		//ret = db_get(db, &sk, &sv);
+								/*
 		if (ret) {
 			//db_free_data(sv.mem);
 			found++;
 		} else {
 			INFO("not found key#%s", 
-					sk.mem);
-    	}
+					sk.mem);		
+    		}
+								*/
+		found++;
+
 
 		if ((i % 10000) == 0) {
 			fprintf(stderr,"random read finished %d ops%30s\r", 

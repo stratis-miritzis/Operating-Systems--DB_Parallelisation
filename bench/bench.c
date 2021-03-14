@@ -82,15 +82,17 @@ int main(int argc,char** argv)
 	
 	if (strcmp(argv[1], "write") == 0) {
 		int r = 0;
+		threads = atoi(argv[3]);
 
 		count = atoi(argv[2]);
 		_print_header(count);
 		_print_environment();
 		if (argc == 5)
 			r = 1;
-		_write_test(count, r);
+		_write_test(count, r, threads);
 	} else if (strcmp(argv[1], "read") == 0) {
 		int r = 0;
+		threads = atoi(argv[3]);
 
 		count = atoi(argv[2]);
 		_print_header(count);
@@ -98,7 +100,7 @@ int main(int argc,char** argv)
 		if (argc == 5)
 			r = 1;
 		
-		_read_test(count, r); //readwrite
+		_read_test(count, r, threads); 
 	}else if (strcmp(argv[1], "readwrite") == 0) {
 		int r = 0;
 
@@ -110,7 +112,7 @@ int main(int argc,char** argv)
 		if (argc == 5)
 			r = 1;
 		
-		_read_test(count, r);
+		_read_test(count, r, threads);   //readwrite
 
 	} else {
 		fprintf(stderr,"Usage: db-bench <write | read | readwrite> <count> <threads> <random>\n");

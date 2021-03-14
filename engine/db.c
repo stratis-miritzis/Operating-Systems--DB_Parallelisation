@@ -57,10 +57,15 @@ int db_add(DB* self, Variant* key, Variant* value)
     return memtable_add(self->memtable, key, value);
 }
 
-int db_get(DB* self, Variant* key, Variant* value)
+//int db_get(DB* self, Variant* key, Variant* value)
+void* db_get(void* arg)
 {
+    args* loc = (args*)arg;
+    DB* self = loc->db;
+    Variant* key = loc->sk;
+    Variant* value = loc->sv;
     if (memtable_get(self->memtable->list, key, value) == 1)
-        return 1;
+        //return 1;
 
     return sst_get(self->sst, key, value);
 }
