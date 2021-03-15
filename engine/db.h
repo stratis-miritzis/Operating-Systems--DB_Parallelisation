@@ -14,20 +14,12 @@ typedef struct _db {
     MemTable* memtable;
 } DB;
 
-typedef struct ARGS{
-		DB *db;
-		Variant *sk;
-		Variant *sv;
-}args;
-
-
 DB* db_open(const char *basedir);
 DB* db_open_ex(const char *basedir, uint64_t cache_size);
 
 void db_close(DB* self);
 int db_add(DB* self, Variant* key, Variant* value);
-//int db_get(DB* self, Variant* key, Variant* value);
-void* db_get(void* arg);
+int db_get(DB* self, Variant* key, Variant* value);
 int db_remove(DB* self, Variant* key);
 
 typedef struct _db_iterator {

@@ -5,8 +5,11 @@
 
 #define DATAS ("testdb")
 
-void _write_test(long int count, int r, int threadcount)
+void* _write_test(void* arg)
 {
+	args* loc = (args*)arg;
+	long int count = loc->count;
+	int r = loc->r;
 	int i;
 	double cost;
 	long long start,end;
@@ -57,19 +60,16 @@ void _write_test(long int count, int r, int threadcount)
 		,count, (double)(cost / count)
 		,(double)(count / cost)
 		,cost);	
+	return NULL;
 }
 
-void _read_test(long int count, int r, int threadcount)
+void* _read_test(void* arg)
 {
-	pthread_t *threads;
-	threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
-
-	args *arg;
-	arg = (args*)malloc(sizeof(args));
-
+	args* loc = (args*)arg;
+	long int count = loc->count;
+	int r = loc->r;
 	int i;
-	int* ret;
-	ret = (int*)malloc(sizeof(int));
+	int ret;
 	int found = 0;
 	double cost;
 	long long start,end;
@@ -80,7 +80,6 @@ void _read_test(long int count, int r, int threadcount)
 
 	db = db_open(DATAS);
 	start = get_ustime_sec();
-
 	for (i = 0; i < count; i++) {
 		memset(key, 0, KSIZE + 1);
 
@@ -92,25 +91,14 @@ void _read_test(long int count, int r, int threadcount)
 		fprintf(stderr, "%d searching %s\n", i, key);
 		sk.length = KSIZE;
 		sk.mem = key;
-		
-
-		
-		arg->db = db;
-		arg->sk = &sk;
-		arg->sv = &sv;
-		pthread_create(&threads[i],NULL,db_get,(void*)arg);
-		pthread_join(threads[i],(void*)&ret);
-		//ret = db_get(db, &sk, &sv);
-
-		if (*ret) {
+		ret = db_get(db, &sk, &sv);
+		if (ret) {
 			//db_free_data(sv.mem);
 			found++;
 		} else {
 			INFO("not found key#%s", 
-					sk.mem);		
-    		}
-
-
+					sk.mem);
+    	}
 
 		if ((i % 10000) == 0) {
 			fprintf(stderr,"random read finished %d ops%30s\r", 
@@ -121,6 +109,7 @@ void _read_test(long int count, int r, int threadcount)
 		}
 	}
 
+	db_close(db);
 
 	end = get_ustime_sec();
 	cost = end - start;
@@ -130,4 +119,5 @@ void _read_test(long int count, int r, int threadcount)
 		(double)(cost / count),
 		(double)(count / cost),
 		cost);
+	return NULL;
 }

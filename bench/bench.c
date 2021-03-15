@@ -70,9 +70,12 @@ void _print_environment()
 
 int main(int argc,char** argv)
 {
+	int i;
 	long int count;
-
-	int threads;
+	pthread_t *threads;
+	int threadcount;
+	args *arg;
+	arg = (args*)malloc(sizeof(args));
 
 	srand(time(NULL));
 	if (argc < 4) {
@@ -82,29 +85,49 @@ int main(int argc,char** argv)
 	
 	if (strcmp(argv[1], "write") == 0) {
 		int r = 0;
-		threads = atoi(argv[3]);
+		threadcount = atoi(argv[3]);
+		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
 
 		count = atoi(argv[2]);
 		_print_header(count);
 		_print_environment();
 		if (argc == 5)
 			r = 1;
-		_write_test(count, r, threads);
+		arg->count = count/threadcount;
+		arg->r = r;
+		for(i = 0;i < threadcount;i++){
+			pthread_create(&threads[i],NULL,_write_test,(void*)arg);
+		}
+		for(i = 0;i < threadcount;i++){
+			pthread_join(threads[i],NULL);
+		}
+		//_write_test(count, r);
 	} else if (strcmp(argv[1], "read") == 0) {
 		int r = 0;
-		threads = atoi(argv[3]);
+		threadcount = atoi(argv[3]);
+		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
 
 		count = atoi(argv[2]);
 		_print_header(count);
 		_print_environment();
 		if (argc == 5)
 			r = 1;
-		
-		_read_test(count, r, threads); 
+
+		arg->count = count/threadcount;
+		arg->r = r;
+		for(i = 0;i < threadcount;i++){
+			pthread_create(&threads[i],NULL,_read_test,(void*)arg);
+		}
+		for(i = 0;i < threadcount;i++){
+			pthread_join(threads[i],NULL);
+		}
+
+
 	}else if (strcmp(argv[1], "readwrite") == 0) {
 		int r = 0;
 
-		threads = atoi(argv[3]);
+		threadcount = atoi(argv[3]);
+		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
 
 		count = atoi(argv[2]);
 		_print_header(count);
@@ -112,7 +135,7 @@ int main(int argc,char** argv)
 		if (argc == 5)
 			r = 1;
 		
-		_read_test(count, r, threads);   //readwrite
+		//_read_test(count, r);   //readwrite
 
 	} else {
 		fprintf(stderr,"Usage: db-bench <write | read | readwrite> <count> <threads> <random>\n");

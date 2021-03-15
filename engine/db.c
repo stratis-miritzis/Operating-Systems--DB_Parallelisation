@@ -4,9 +4,6 @@
 #include "indexer.h"
 #include "utils.h"
 #include "log.h"
-#include "../bench/bench.h"
-
-pthread_mutex_t mtx;
 
 DB* db_open_ex(const char* basedir, uint64_t cache_size)
 {
@@ -60,24 +57,12 @@ int db_add(DB* self, Variant* key, Variant* value)
     return memtable_add(self->memtable, key, value);
 }
 
-//int db_get(DB* self, Variant* key, Variant* value)
-void* db_get(void* arg)
+int db_get(DB* self, Variant* key, Variant* value)
 {
-    pthread_mutex_lock(&mtx);
-    int* ret;
-    ret = (int *)malloc(sizeof(int));
-    args* loc = (args*)arg;
-    DB* self = loc->db;
-    Variant* key = loc->sk;
-    Variant* value = loc->sv;
-    if (memtable_get(self->memtable->list, key, value) == 1){
-	*ret = 1;
-	pthread_mutex_unlock(&mtx);
-	return ret;
-    }
-    *ret = sst_get(self->sst, key, value);
-    pthread_mutex_unlock(&mtx);
-    return ret;
+    if (memtable_get(self->memtable->list, key, value) == 1)
+        return 1;
+
+    return sst_get(self->sst, key, value);
 }
 
 int db_remove(DB* self, Variant* key)
