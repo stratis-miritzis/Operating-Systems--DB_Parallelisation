@@ -5,6 +5,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
+#include "../engine/db.h"
 
 #define KSIZE (16)
 #define VSIZE (1000)
@@ -14,3 +15,5 @@
 
 long long get_ustime_sec(void);
 void _random_key(char *key,int length);
+
+

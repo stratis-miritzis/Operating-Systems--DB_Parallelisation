@@ -64,16 +64,12 @@ void _read_test(long int count, int r, int threadcount)
 	pthread_t *threads;
 	threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
 
-	typedef struct ARGS{
-		DB *db;
-		Variant *sk;
-		Variant *sv;
-	}args;
-	args arg;
-	//arg = (args*) malloc(sizeof(args));
+	args *arg;
+	arg = (args*)malloc(sizeof(args));
 
 	int i;
-	int ret;
+	int* ret;
+	ret = (int*)malloc(sizeof(int));
 	int found = 0;
 	double cost;
 	long long start,end;
@@ -98,24 +94,22 @@ void _read_test(long int count, int r, int threadcount)
 		sk.mem = key;
 		
 
-
-		arg.db = db;
-		arg.sk = &sk;
-		arg.sv = &sv;
-
-		pthread_create(&threads[i],NULL,db_get,(void*)&arg);
-
+		
+		arg->db = db;
+		arg->sk = &sk;
+		arg->sv = &sv;
+		pthread_create(&threads[i],NULL,db_get,(void*)arg);
+		pthread_join(threads[i],(void*)&ret);
 		//ret = db_get(db, &sk, &sv);
-								/*
-		if (ret) {
+
+		if (*ret) {
 			//db_free_data(sv.mem);
 			found++;
 		} else {
 			INFO("not found key#%s", 
 					sk.mem);		
     		}
-								*/
-		found++;
+
 
 
 		if ((i % 10000) == 0) {
@@ -127,7 +121,6 @@ void _read_test(long int count, int r, int threadcount)
 		}
 	}
 
-	db_close(db);
 
 	end = get_ustime_sec();
 	cost = end - start;
