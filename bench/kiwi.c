@@ -5,8 +5,11 @@
 
 #define DATAS ("testdb")
 
+pthread_mutex_t mtx;
+
 void* _write_test(void* arg)
 {
+    	pthread_mutex_lock(&mtx);
 	args* loc = (args*)arg;
 	long int count = loc->count;
 	int r = loc->r;
@@ -59,7 +62,8 @@ void* _write_test(void* arg)
 	printf("|Random-Write	(done:%ld): %.6f sec/op; %.1f writes/sec(estimated); cost:%.3f(sec);\n"
 		,count, (double)(cost / count)
 		,(double)(count / cost)
-		,cost);	
+		,cost);
+	pthread_mutex_unlock(&mtx);	
 	return NULL;
 }
 
