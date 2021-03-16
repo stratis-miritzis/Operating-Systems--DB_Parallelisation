@@ -16,7 +16,6 @@ void* _write_test(void* arg)
 	long int count = loc->count;
 	int r = loc->r;
 	int curKey = loc->curKey;
-	//int i;
 	Variant sk, sv;
 	DB* db;
 
@@ -29,8 +28,7 @@ void* _write_test(void* arg)
 	memset(sbuf, 0, 1024);
 
 	db = db_open(DATAS);
-
-
+	
 	for(;curKey < count; curKey++) {
 		if (r)
 			_random_key(key, KSIZE);
@@ -53,7 +51,6 @@ void* _write_test(void* arg)
 			fflush(stderr);
 		}
 	}
-
 	db_close(db);
 
 	pthread_mutex_unlock(&mtx);	
@@ -69,24 +66,24 @@ void* _read_test(void* arg)
 	args* loc = (args*)arg;
 	long int count = loc->count;
 	int r = loc->r;
-	int i;
 	int ret;
 	int found = 0;
 	Variant sk;
 	Variant sv;
 	DB* db;
 	char key[KSIZE + 1];
+	int curKey = loc->curKey;
 
 	db = db_open(DATAS);
-	for (i = 0; i < count; i++) {
+	for (;curKey < count; curKey++) {
 		memset(key, 0, KSIZE + 1);
 
 		/* if you want to test random write, use the following */
 		if (r)
 			_random_key(key, KSIZE);
 		else
-			snprintf(key, KSIZE, "key-%d", i);
-		fprintf(stderr, "%d searching %s\n", i, key);
+			snprintf(key, KSIZE, "key-%d", curKey);
+		fprintf(stderr, "%d searching %s\n", curKey, key);
 		sk.length = KSIZE;
 		sk.mem = key;
 		ret = db_get(db, &sk, &sv);
@@ -98,9 +95,9 @@ void* _read_test(void* arg)
 					sk.mem);
     	}
 
-		if ((i % 10000) == 0) {
+		if ((curKey % 10000) == 0) {
 			fprintf(stderr,"random read finished %d ops%30s\r", 
-					i, 
+					curKey, 
 					"");
 
 			fflush(stderr);
