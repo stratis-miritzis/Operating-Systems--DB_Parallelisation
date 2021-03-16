@@ -5,6 +5,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 
 #define KSIZE (16)
