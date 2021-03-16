@@ -19,7 +19,12 @@ void _random_key(char *key,int length);
 typedef struct ARGS{
 	long int count;
 	int r;
+	int curKey;
 }args;
+
+typedef struct RES{
+    long int count,found;
+}res;
 
 void* _write_test(void*);
 void* _read_test(void*);

@@ -10,12 +10,13 @@ pthread_mutex_t mtx;
 void* _write_test(void* arg)
 {
     	pthread_mutex_lock(&mtx);
+	res* retu;
+	retu = (res*)malloc(sizeof(res));
 	args* loc = (args*)arg;
 	long int count = loc->count;
 	int r = loc->r;
-	int i;
-	double cost;
-	long long start,end;
+	int curKey = loc->curKey;
+	//int i;
 	Variant sk, sv;
 	DB* db;
 
@@ -29,14 +30,14 @@ void* _write_test(void* arg)
 
 	db = db_open(DATAS);
 
-	start = get_ustime_sec();
-	for (i = 0; i < count; i++) {
+
+	for(;curKey < count; curKey++) {
 		if (r)
 			_random_key(key, KSIZE);
 		else
-			snprintf(key, KSIZE, "key-%d", i);
-		fprintf(stderr, "%d adding %s\n", i, key);
-		snprintf(val, VSIZE, "val-%d", i);
+			snprintf(key, KSIZE, "key-%d", curKey);
+		fprintf(stderr, "%d adding %s\n", curKey, key);
+		snprintf(val, VSIZE, "val-%d", curKey);
 
 		sk.length = KSIZE;
 		sk.mem = key;
@@ -44,9 +45,9 @@ void* _write_test(void* arg)
 		sv.mem = val;
 
 		db_add(db, &sk, &sv);
-		if ((i % 10000) == 0) {
+		if ((curKey % 10000) == 0) {
 			fprintf(stderr,"random write finished %d ops%30s\r", 
-					i, 
+					curKey, 
 					"");
 
 			fflush(stderr);
@@ -55,35 +56,28 @@ void* _write_test(void* arg)
 
 	db_close(db);
 
-	end = get_ustime_sec();
-	cost = end -start;
-
-	printf(LINE);
-	printf("|Random-Write	(done:%ld): %.6f sec/op; %.1f writes/sec(estimated); cost:%.3f(sec);\n"
-		,count, (double)(cost / count)
-		,(double)(count / cost)
-		,cost);
 	pthread_mutex_unlock(&mtx);	
-	return NULL;
+	retu->count = count;
+	retu->found = 0;
+	return retu;
 }
 
 void* _read_test(void* arg)
 {
+	res* retu;
+	retu = (res*)malloc(sizeof(res));
 	args* loc = (args*)arg;
 	long int count = loc->count;
 	int r = loc->r;
 	int i;
 	int ret;
 	int found = 0;
-	double cost;
-	long long start,end;
 	Variant sk;
 	Variant sv;
 	DB* db;
 	char key[KSIZE + 1];
 
 	db = db_open(DATAS);
-	start = get_ustime_sec();
 	for (i = 0; i < count; i++) {
 		memset(key, 0, KSIZE + 1);
 
@@ -115,13 +109,18 @@ void* _read_test(void* arg)
 
 	db_close(db);
 
-	end = get_ustime_sec();
-	cost = end - start;
-	printf(LINE);
-	printf("|Random-Read	(done:%ld, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%.3f(sec)\n",
-		count, found,
-		(double)(cost / count),
-		(double)(count / cost),
-		cost);
-	return NULL;
+	retu->count = count;
+	retu->found = found;
+	return retu;
 }
+
+
+
+
+
+
+
+
+
+
+

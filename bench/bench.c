@@ -76,6 +76,12 @@ int main(int argc,char** argv)
 	int threadcount;
 	args *arg;
 	arg = (args*)malloc(sizeof(args));
+	res* ret;
+	ret = (res*)malloc(sizeof(res));
+	long int cnt = 0;
+	int found = 0;
+	double cost;
+	long long int start,end;
 
 	srand(time(NULL));
 	if (argc < 4) {
@@ -83,7 +89,7 @@ int main(int argc,char** argv)
 		exit(1);
 	}
 	
-	if (strcmp(argv[1], "write") == 0) {
+	if (strcmp(argv[1], "write") == 0) {						//write
 		int r = 0;
 		threadcount = atoi(argv[3]);
 		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
@@ -93,16 +99,30 @@ int main(int argc,char** argv)
 		_print_environment();
 		if (argc == 5)
 			r = 1;
+		arg->curKey = 0;
 		arg->count = count/threadcount;
 		arg->r = r;
+		start = get_ustime_sec();
 		for(i = 0;i < threadcount;i++){
 			pthread_create(&threads[i],NULL,_write_test,(void*)arg);
+			arg->curKey += count/threadcount;
+			arg->count += count/threadcount;
 		}
-		for(i = 0;i < threadcount;i++){
-			pthread_join(threads[i],NULL);
+     		for(i = 0;i < threadcount;i++){
+            		pthread_join(threads[i],(void*)&ret);
+            		cnt += ret->count;
 		}
-		//_write_test(count, r);
-	} else if (strcmp(argv[1], "read") == 0) {
+		end = get_ustime_sec();
+		cost = end -start;
+
+		printf(LINE);
+		printf("|Random-Write	(done:%ld): %.6f sec/op; %.1f writes/sec(estimated); cost:%.3f(sec);\n"
+			,cnt, (double)(cost / cnt)
+			,(double)(cnt / cost)
+			,cost);	
+
+	} else if (strcmp(argv[1], "read") == 0) {					//read
+
 		int r = 0;
 		threadcount = atoi(argv[3]);
 		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
@@ -115,14 +135,26 @@ int main(int argc,char** argv)
 
 		arg->count = count/threadcount;
 		arg->r = r;
+		start = get_ustime_sec();
 		for(i = 0;i < threadcount;i++){
 			pthread_create(&threads[i],NULL,_read_test,(void*)arg);
 		}
-		for(i = 0;i < threadcount;i++){
-			pthread_join(threads[i],NULL);
+     		for(i = 0;i < threadcount;i++){
+            		pthread_join(threads[i],(void*)&ret);
+            		cnt += ret->count;
+            		found += ret->found;
 		}
-
-
+		
+		end = get_ustime_sec();
+		cost = end - start;
+		printf(LINE);
+		printf("%lld\n%lld\n",end,start);
+		printf("|Random-Read	(done:%ld, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%.6f(sec)\n",
+			cnt, found,
+			(double)(cost / cnt),
+			(double)(cnt / cost),
+			cost);
+	
 
 	}else if (strcmp(argv[1], "readwrite") == 0) {
 		int r = 0;
