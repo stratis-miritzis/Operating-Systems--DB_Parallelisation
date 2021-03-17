@@ -28,3 +28,4 @@ typedef struct RES{
 
 void* _write_test(void*);
 void* _read_test(void*);
+pthread_mutex_t mtx;

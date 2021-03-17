@@ -85,7 +85,7 @@ int main(int argc,char** argv)
 
 	srand(time(NULL));
 	if (argc < 4) {
-		fprintf(stderr,"Usage: db-bench <write | read | readwrite> <count> <threads>\n");
+		fprintf(stderr,"Usage: db-bench <write | read | readwrite> <count> <threads> <readwrite %c >\n",37);
 		exit(1);
 	}
 	
@@ -93,7 +93,7 @@ int main(int argc,char** argv)
 		int r = 0;
 		threadcount = atoi(argv[3]);
 		arg = (args*)malloc(threadcount*sizeof(args));
-		threads  = (pthread_t*)malloc((threadcount+1)*sizeof(pthread_t));
+		threads  = (pthread_t*)malloc((threadcount)*sizeof(pthread_t));
 
 
 		count = atoi(argv[2]);
@@ -114,10 +114,9 @@ int main(int argc,char** argv)
 		}
 		for(i = 0;i < threadcount;i++){
 			pthread_create(&threads[i],NULL,_write_test,(void*)&arg[i]);
-
 		}
      		for(i = 0;i < threadcount;i++){
-            		pthread_join(threads[i],(void*)&ret);
+            		pthread_join(threads[i],NULL);
 		}
 		end = get_ustime_sec();
 		cost = end -start;
@@ -172,23 +171,68 @@ int main(int argc,char** argv)
 			cost);
 	
 
-	}else if (strcmp(argv[1], "readwrite") == 0) {
+	}else if (strcmp(argv[1], "readwrite") == 0) {					//readwrite
 		int r = 0;
-
-		threadcount = atoi(argv[3]);
-		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
-
-		count = atoi(argv[2]);
-		_print_header(count);
-		_print_environment();
-		if (argc == 5)
+		int perc = atoi(argv[4]);
+		count = atoi(argv[2]);	
+		if (argc == 6)
 			r = 1;
 		
+		threadcount = atoi(argv[3]);
+		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
+		arg = (args*)malloc(threadcount*2*sizeof(args));
+		int work = count/threadcount;
+		_print_header(count);
+		_print_environment();
+
+
+		start = get_ustime_sec();
+
+		arg[0].curKey = 0;
+		arg[0].count = work;
+		arg[0].r = r;
+		arg[threadcount].curKey = 0;
+		arg[threadcount].count = work;
+		arg[threadcount].r = r;
+
+		for(i = 1;i < threadcount*2;i++){
+			if(i<threadcount){
+				arg[i].curKey = i*((count*perc/100)/threadcount);
+				arg[i].count = (i+1)*((count*perc/100)/threadcount);
+			}else{
+				arg[i].curKey = i*(1-((count*(perc/100))/threadcount));
+				arg[i].count = (i+1)*(1-((count*(perc/100))/threadcount));
+			}
+		}
+		
+		for(i = 0;i < threadcount*2;i++){
+			printf("LOL\n%d \n %ld \n",arg[i].curKey,arg[i].count);
+
+		}
+/*
+		for(i = 0;i < threadcount;i++){
+			pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
+		}
+		for(i = threadcount+1;i < threadcount*2;i++){
+			pthread_create(&threads[i],NULL,_write_test,(void*)&arg[i]);
+		}
+
+     		for(i = 0;i < threadcount*2;i++){
+            		pthread_join(threads[i],NULL);
+		}
+*/	
+		end = get_ustime_sec();
+		cost = end - start;
+		printf(LINE);
+
 
 	} else {
 		fprintf(stderr,"Usage: db-bench <write | read | readwrite> <count> <threads> <random>\n");
 		exit(1);
 	}
 
+	free(ret);
+	free(arg);
+	free(threads);
 	return 1;
 }

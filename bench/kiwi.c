@@ -5,13 +5,10 @@
 
 #define DATAS ("testdb")
 
-pthread_mutex_t mtx;
 
 void* _write_test(void* arg)
 {
     	pthread_mutex_lock(&mtx);
-	res* retu;
-	retu = (res*)malloc(sizeof(res));
 	args* loc = (args*)arg;
 	long int count = loc->count;
 	int r = loc->r;
@@ -53,10 +50,8 @@ void* _write_test(void* arg)
 	}
 	db_close(db);
 
-	pthread_mutex_unlock(&mtx);	
-	retu->count = count;
-	retu->found = 0;
-	return retu;
+	pthread_mutex_unlock(&mtx);
+	return NULL;
 }
 
 void* _read_test(void* arg)
@@ -109,6 +104,7 @@ void* _read_test(void* arg)
 	retu->count = count;
 	retu->found = found;
 	return retu;
+	free(retu);
 }
 
 
