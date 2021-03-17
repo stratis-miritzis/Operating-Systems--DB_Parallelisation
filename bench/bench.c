@@ -111,6 +111,7 @@ int main(int argc,char** argv)
 		for(i = 1;i < threadcount;i++){
 			arg[i].curKey = i*work;
 			arg[i].count = (i+1)*work;
+			arg[i].r = r;
 		}
 		for(i = 0;i < threadcount;i++){
 			pthread_create(&threads[i],NULL,_write_test,(void*)&arg[i]);
@@ -151,6 +152,7 @@ int main(int argc,char** argv)
 		for(i = 1;i < threadcount;i++){
 			arg[i].curKey = i*work;
 			arg[i].count = (i+1)*work;
+			arg[i].r = r;
 		}
 		for(i = 0;i < threadcount;i++){
 			pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
@@ -177,54 +179,60 @@ int main(int argc,char** argv)
 		count = atoi(argv[2]);	
 		if (argc == 6)
 			r = 1;
-		
 		threadcount = atoi(argv[3]);
-		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
+		threads  = (pthread_t*)malloc(threadcount*2*sizeof(pthread_t));
 		arg = (args*)malloc(threadcount*2*sizeof(args));
-		int work = count/threadcount;
+		int work = (count*perc/100)/threadcount;
+		int workr = (count*(100-perc)/100)/threadcount;
 		_print_header(count);
 		_print_environment();
-
-
+		int writen = count*perc/100;
+		//printf("%d\n%d\n",work,workr);
 		start = get_ustime_sec();
 
 		arg[0].curKey = 0;
 		arg[0].count = work;
 		arg[0].r = r;
 		arg[threadcount].curKey = 0;
-		arg[threadcount].count = work;
+		arg[threadcount].count = workr;
 		arg[threadcount].r = r;
 
 		for(i = 1;i < threadcount*2;i++){
-			if(i<threadcount){
-				arg[i].curKey = i*((count*perc/100)/threadcount);
-				arg[i].count = (i+1)*((count*perc/100)/threadcount);
-			}else{
-				arg[i].curKey = i*(1-((count*(perc/100))/threadcount));
-				arg[i].count = (i+1)*(1-((count*(perc/100))/threadcount));
+			if(i < threadcount){
+				arg[i].curKey = i*(work);
+				arg[i].count = (i+1)*(work);
+				arg[i].r = r;
+			}else if(i > threadcount){
+				arg[i].curKey = (i-threadcount)*(workr);
+				arg[i].count = (i-threadcount+1)*(workr);
+				arg[i].r = r;
 			}
 		}
 		
 		for(i = 0;i < threadcount*2;i++){
-			printf("LOL\n%d \n %ld \n",arg[i].curKey,arg[i].count);
-
-		}
-/*
-		for(i = 0;i < threadcount;i++){
-			pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
-		}
-		for(i = threadcount+1;i < threadcount*2;i++){
-			pthread_create(&threads[i],NULL,_write_test,(void*)&arg[i]);
+			//printf("%d \n",arg[i].r);
 		}
 
+
+		for(i = 0;i < threadcount*2;i++){
+			if(i < threadcount){
+				pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
+			}else{
+				pthread_create(&threads[i],NULL,_write_test,(void*)&arg[i]);
+			}
+		}
      		for(i = 0;i < threadcount*2;i++){
-            		pthread_join(threads[i],NULL);
+            		pthread_join(threads[i],(void*)&ret);
+			found += ret->found;
 		}
-*/	
 		end = get_ustime_sec();
 		cost = end - start;
 		printf(LINE);
-
+		printf("|Random-ReadWrite	(done:%ld, writen:%d, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%.6f(sec)\n",
+			count,writen,found,
+			(double)(cost / count),
+			(double)(count / cost),
+			cost);
 
 	} else {
 		fprintf(stderr,"Usage: db-bench <write | read | readwrite> <count> <threads> <random>\n");
