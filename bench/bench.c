@@ -1,5 +1,5 @@
 #include "bench.h"
-
+pthread_mutex_t lock;
 
 void _random_key(char *key,int length) {
 	int i;
@@ -180,51 +180,52 @@ int main(int argc,char** argv)
 		if (argc == 6)
 			r = 1;
 		threadcount = atoi(argv[3]);
-		threads  = (pthread_t*)malloc(threadcount*2*sizeof(pthread_t));
-		arg = (args*)malloc(threadcount*2*sizeof(args));
-		int work = (count*perc/100)/threadcount;
-		int workr = (count*(100-perc)/100)/threadcount;
+		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
+		arg = (args*)malloc(threadcount*sizeof(args));
 		_print_header(count);
 		_print_environment();
+		int workr = (count*(100-perc)/100)/(threadcount-1);
 		int writen = count*perc/100;
 		//printf("%d\n%d\n",work,workr);
 		start = get_ustime_sec();
 
 		arg[0].curKey = 0;
-		arg[0].count = work;
+		arg[0].count = writen;
 		arg[0].r = r;
-		arg[threadcount].curKey = 0;
-		arg[threadcount].count = workr;
-		arg[threadcount].r = r;
 
-		for(i = 1;i < threadcount*2;i++){
-			if(i < threadcount){
-				arg[i].curKey = i*(work);
-				arg[i].count = (i+1)*(work);
-				arg[i].r = r;
-			}else if(i > threadcount){
-				arg[i].curKey = (i-threadcount)*(workr);
-				arg[i].count = (i-threadcount+1)*(workr);
-				arg[i].r = r;
-			}
-		}
+
 		
-		for(i = 0;i < threadcount*2;i++){
-			//printf("%d \n",arg[i].r);
+		arg[1].curKey = 0;
+		arg[1].count = workr;
+		arg[1].r = r;
+
+//1000rw 11th 50% --> 500w, 500r(50r/(th-1))
+
+		for(i = 2;i < threadcount;i++){
+			arg[i].curKey = workr*(i-1);
+			arg[i].count = workr*(i-1)+workr;
+			arg[i].r = r;
 		}
 
+		for(i = 0;i < threadcount;i++){
+			//printf("%d \n %d \n\n",arg[i].curKey,arg[i].count);
+		}
+	
 
-		for(i = 0;i < threadcount*2;i++){
-			if(i < threadcount){
-				pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
-			}else{
+		for(i = 0;i < threadcount;i++){
+			if(i == 0){
 				pthread_create(&threads[i],NULL,_write_test,(void*)&arg[i]);
+				pthread_join(threads[i],NULL);
+			}else{
+				pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
 			}
+
 		}
-     		for(i = 0;i < threadcount*2;i++){
+     		for(i = 0;i < threadcount;i++){
             		pthread_join(threads[i],(void*)&ret);
 			found += ret->found;
 		}
+
 		end = get_ustime_sec();
 		cost = end - start;
 		printf(LINE);
