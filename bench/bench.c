@@ -201,27 +201,19 @@ int main(int argc,char** argv)
 		arg[1].curKey = 0;
 		arg[1].count = workr;
 		arg[1].r = r;
-
+		pthread_create(&threads[1],NULL,_read_test,(void*)&arg[1]);
+		pthread_create(&threads[0],NULL,_write_test,(void*)&arg[0]);
+		pthread_join(threads[1],NULL);
 
 		for(i = 2;i < threadcount;i++){
 			arg[i].curKey = workr*(i-1);
 			arg[i].count = workr*(i-1)+workr;
 			arg[i].r = r;
-		}
+		}	
 
-		for(i = 0;i < threadcount;i++){
-			//printf("%d \n %d \n\n",arg[i].curKey,arg[i].count);
-		}
-	
 
-		for(i = 0;i < threadcount;i++){
-			if(i == 0){
-				pthread_create(&threads[i],NULL,_write_test,(void*)&arg[i]);
-				pthread_join(threads[i],NULL);
-			}else{
-				pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
-			}
-
+		for(i = 1;i < threadcount;i++){
+			pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
 		}
      		for(i = 0;i < threadcount;i++){
             		pthread_join(threads[i],(void*)&ret);
