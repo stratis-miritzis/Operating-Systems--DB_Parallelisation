@@ -64,7 +64,8 @@ int db_add(DB* self, Variant* key, Variant* value)
 
 int db_get(DB* self, Variant* key, Variant* value)
 {
-    if (memtable_get(self->memtable->list, key, value) == 1)
+	int memstate = memtable_get(self->memtable->list, key, value);
+    if (memstate == 1)
         return 1;
 
     return sst_get(self->sst, key, value);
