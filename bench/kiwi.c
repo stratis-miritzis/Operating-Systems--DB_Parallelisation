@@ -8,7 +8,7 @@
 
 void* _write_test(void* arg)
 {
-    	pthread_mutex_lock(&mtx);
+    //	pthread_mutex_lock(&mtx);
 	res* retu;
 	retu = (res*)malloc(sizeof(res));
 	args* loc = (args*)arg;
@@ -52,7 +52,7 @@ void* _write_test(void* arg)
 	}
 	db_close(db);
 
-	pthread_mutex_unlock(&mtx);
+	//pthread_mutex_unlock(&mtx);
 	retu->found = 0;
 	return retu;
 }

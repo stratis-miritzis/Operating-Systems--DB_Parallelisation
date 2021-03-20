@@ -202,7 +202,6 @@ int main(int argc,char** argv)
 		arg[1].count = workr;
 		arg[1].r = r;
 
-//1000rw 11th 50% --> 500w, 500r(50r/(th-1))
 
 		for(i = 2;i < threadcount;i++){
 			arg[i].curKey = workr*(i-1);
