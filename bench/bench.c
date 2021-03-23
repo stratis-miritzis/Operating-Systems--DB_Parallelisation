@@ -1,8 +1,6 @@
 #include "bench.h"
-#include "../engine/db.h"
-pthread_mutex_t lock;
 
-#define DATAS ("testdb")
+#define DATAS ("testdb")  /*to metaferame apo to arxeio kiwi.c gia na ekteloume to db_open,db_close mia fwra xwris ta threads*/
 
 void _random_key(char *key,int length) {
 	int i;
@@ -72,33 +70,43 @@ void _print_environment()
 	}
 }
 
+/*----OUR CODE----*/
+
+void _print_help(){					/*e3hgei thn xrhsh twn orismatwn sto command line*/
+		printf(LINE1);
+		printf("\nIn readwrite mode the minimum threads are 2.\nWhen in readwrite mode the 4th argument defines the percentage \nat which the count is split up to read and writes.\n100 means 100%c of the count number is written.\n\n",37);
+		printf(LINE1);
+}
+
 int main(int argc,char** argv)
 {
-	int i;
-	long int count;
-	pthread_t *threads;
-	int threadcount;
-	args *arg;
-	res* ret;
-	ret = (res*)malloc(sizeof(res));
-	long int cnt = 0;
+	int i;				/*counter gia tis for*/
+	long int count;	
+	pthread_t *threads;		/*pinakas me antikeimena pthread_t*/
+	int threadcount;		/*orisma apo grammh entolwn gia to posa threads tha xrhsimopoih8oun*/
+	args *arg;			/*pinakas me antikeimena args(struct ston bench.h) gia ta orismata twn threads*/
+	res* ret;			/*pinakas me antikeimena res(struct ston bench.h) gia ta apotelesmata twn threads*/
+	ret = (res*)malloc(sizeof(res));		
 	int found = 0;
 	double cost;
 	long long int start,end;
 
-	DB* db;
+	DB* db;				/*to metaferame apo to arxeio kiwi.c gia na ekteloume to db_open,db_close mia fwra xwris ta threads*/
 
 	srand(time(NULL));
+	if (strcmp(argv[1], "help") == 0){
+		_print_help();
+	}
 	if (argc < 4) {
 		fprintf(stderr,"Usage: db-bench <write | read | readwrite> <count> <threads> <readwrite %c >\n",37);
 		exit(1);
 	}
-	
+
 	if (strcmp(argv[1], "write") == 0) {						//write
 		int r = 0;
-		threadcount = atoi(argv[3]);
-		arg = (args*)malloc(threadcount*sizeof(args));
-		threads  = (pthread_t*)malloc((threadcount)*sizeof(pthread_t));
+		threadcount = atoi(argv[3]);						/*to 3o argument apo to command line gia ton ari8mo twn threads*/
+		arg = (args*)malloc(threadcount*sizeof(args));				/*pinakas me antikeimena args(struct ston bench.h) gia ta orismata twn threads*/
+		threads  = (pthread_t*)malloc((threadcount)*sizeof(pthread_t));		/*pinakas me antikeimena pthread_t*/
 
 
 		count = atoi(argv[2]);
@@ -106,25 +114,33 @@ int main(int argc,char** argv)
 		_print_environment();
 		if (argc == 5)
 			r = 1;
-		int work = count/threadcount;
 		start = get_ustime_sec();
 
-		db = db_open(DATAS);
+				/*----------DIKOS MAS KWDIKAS-----------*/
 
-		arg[0].db = db;
-		arg[0].curKey = 0;
-		arg[0].count = count/threadcount;
-		arg[0].r = r;
+		int work = count/threadcount;						/*ypologizoume ton forto(posa writes) tou ka8e thread*/
+		db = db_open(DATAS);							/*anoigoume-arxikopoioume thn vash dedomenwn*/
+		
+/*arxizoume kai gemizoume ton pinaka me ta orismata poy dinoume sta threads.
+Otan kalloume thn _write_test sto kiwi.c ths dinoume san orisma thn vash 
+dedomenwn, apo poio kleidi ews poio 8a grapsei ka8e thread (curkey-count),
+kai an 8a grapsei tyxaia kleidia.*/
 
-		for(i = 1;i < threadcount;i++){
+		for(i = 0;i < threadcount;i++){
 			arg[i].db = db;
 			arg[i].curKey = i*work;
 			arg[i].count = (i+1)*work;
 			arg[i].r = r;
 		}
+
+/*apo8hkeuoume ta threads ston pinaka antikeimenwn pthread_t kai dinoume orismata apo ton pinaka arg pou ta kanoume cast se typo void*/
+
 		for(i = 0;i < threadcount;i++){
-			pthread_create(&threads[i],NULL,_write_test,(void*)&arg[i]);
+			pthread_create(&threads[i],NULL,_write_test,(void*)&arg[i]);	
 		}
+
+/*ta kanoume join wste na teleiwsoun ola mazi */
+
      		for(i = 0;i < threadcount;i++){
             		pthread_join(threads[i],NULL);
 		}
@@ -132,7 +148,8 @@ int main(int argc,char** argv)
 		end = get_ustime_sec();
 		cost = end -start;
 		
-		db_close(db);
+		db_close(db);				/*kleinoume to db*/
+							/*print olika stats(ta metaferame apo to kiwi.c) gia na mhn kaleitai apo to ka8e thread*/
 
 		printf(LINE);
 		printf("|Random-Write	(done:%ld): %.6f sec/op; %.1f writes/sec(estimated); cost:%.3f(sec);\n"
@@ -144,9 +161,9 @@ int main(int argc,char** argv)
 	} else if (strcmp(argv[1], "read") == 0) {					//read
 
 		int r = 0;
-		threadcount = atoi(argv[3]);
-		arg = (args*)malloc(threadcount*sizeof(args));
-		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
+		threadcount = atoi(argv[3]);						/*orisma apo grammh entolwn gia to posa threads tha xrhsimopoih8oun*/
+		arg = (args*)malloc(threadcount*sizeof(args));				/*pinakas me antikeimena args(struct ston bench.h) gia ta orismata twn threads*/
+		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));		/*pinakas me antikeimena pthread_t*/
 
 		count = atoi(argv[2]);
 		_print_header(count);
@@ -154,34 +171,41 @@ int main(int argc,char** argv)
 		if (argc == 5)
 			r = 1;
 
-		db = db_open(DATAS);
+		int work = count/threadcount;						/*ypologizoume ton forto(posa reads) tou ka8e thread*/
+		db = db_open(DATAS);							/*anoigoume-arxikopoioume thn vash dedomenwn*/
 
-		int work = count/threadcount;
+
 		start = get_ustime_sec();
 
-		arg[0].db = db;
-		arg[0].curKey = 0;
-		arg[0].count = count/threadcount;
-		arg[0].r = r;
-	
-		for(i = 1;i < threadcount;i++){
+/*arxizoume kai gemizoume ton pinaka me ta orismata poy dinoume sta threads.
+Otan kalloume thn _read_test sto kiwi.c ths dinoume san orisma thn vash 
+dedomenwn, apo poio kleidi ews poio 8a diavasei ka8e thread (curKey-count),
+kai an 8a diavasei tyxaia kleidia.*/
+
+		for(i = 0;i < threadcount;i++){
 			arg[i].db = db;
 			arg[i].curKey = i*work;
 			arg[i].count = (i+1)*work;
 			arg[i].r = r;
 		}
+
+/*apo8hkeuoume ta threads ston pinaka antikeimenwn pthread_t kai dinoume orismata apo ton pinaka arg pou ta kanoume cast se typo void*/
+
 		for(i = 0;i < threadcount;i++){
 			pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
 		}
+
+/*ta kanoume join wste na teleiwsoun ola mazi kai au3anoume ton counter found analoga me ta evra8h kleidia*/
+
      		for(i = 0;i < threadcount;i++){
             		pthread_join(threads[i],(void*)&ret);
-            		cnt += ret->count;
             		found += ret->found;
 		}
-		db_close(db);
+
+		db_close(db);								/*klhnoume thn vash dedomenwn*/
 		end = get_ustime_sec();
-		cost = end - start;
-		printf(LINE);
+		cost = end - start;							/*print olika stats(ta metaferame apo to kiwi.c) gia na mhn kaleitai apo to ka8e thread*/
+		printf(LINE);	
 		printf("|Random-Read	(done:%ld, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%.6f(sec)\n",
 			count, found,
 			(double)(cost / count),
@@ -190,9 +214,13 @@ int main(int argc,char** argv)
 	
 
 	}else if (strcmp(argv[1], "readwrite") == 0) {					//readwrite
+		if(atoi(argv[3]) < 2){
+			_print_help();
+			exit(1);
+		}
 		int r = 0;
-		int perc = atoi(argv[4]);
-		count = atoi(argv[2]);	
+		int perc = atoi(argv[4]);									/*pososto egrafwn/anagnwsewn. 100 = mono egrafes, 0 = mono anagnwseis*/
+		count = atoi(argv[2]);
 		if (argc == 6)
 			r = 1;
 		threadcount = atoi(argv[3]);
