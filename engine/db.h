@@ -7,7 +7,6 @@
 #include "memtable.h"
 #include "merger.h"
 
-pthread_mutex_t mtx;
 
 
 typedef struct _db {

@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "log.h"
 
+pthread_mutex_t mtx;
 
 DB* db_open_ex(const char* basedir, uint64_t cache_size)
 {
@@ -55,7 +56,7 @@ void db_close(DB *self)
 int db_add(DB* self, Variant* key, Variant* value)
 {
     pthread_mutex_lock(&mtx);
-    int ret;
+    int ret = 0;
     if (memtable_needs_compaction(self->memtable))
     {
         INFO("Starting compaction of the memtable after %d insertions and %d deletions",
@@ -70,10 +71,14 @@ int db_add(DB* self, Variant* key, Variant* value)
 
 int db_get(DB* self, Variant* key, Variant* value)
 {
-    if (memtable_get(self->memtable->list, key, value))
+    pthread_mutex_lock(&mtx);
+    if (memtable_get(self->memtable->list, key, value)){
+	pthread_mutex_unlock(&mtx);
         return 1;
-
-    return sst_get(self->sst, key, value);
+    }
+    int ret = sst_get(self->sst, key, value);
+    pthread_mutex_unlock(&mtx);
+    return ret;
 }
 
 int db_remove(DB* self, Variant* key)
