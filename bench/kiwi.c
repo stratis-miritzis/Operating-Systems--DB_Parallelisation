@@ -8,7 +8,6 @@
 
 void* _write_test(void* arg)
 {
-    //	pthread_mutex_lock(&mtx);
 	res* retu;
 	retu = (res*)malloc(sizeof(res));
 	args* loc = (args*)arg;
@@ -16,7 +15,8 @@ void* _write_test(void* arg)
 	int r = loc->r;
 	int curKey = loc->curKey;
 	Variant sk, sv;
-	DB* db;
+	DB* dbase;
+	dbase = loc->db;
 
 	char key[KSIZE + 1];
 	char val[VSIZE + 1];
@@ -25,8 +25,6 @@ void* _write_test(void* arg)
 	memset(key, 0, KSIZE + 1);
 	memset(val, 0, VSIZE + 1);
 	memset(sbuf, 0, 1024);
-
-	db = db_open(DATAS);
 	
 	for(;curKey < count; curKey++) {
 		if (r)
@@ -41,18 +39,9 @@ void* _write_test(void* arg)
 		sv.length = VSIZE;
 		sv.mem = val;
 
-		db_add(db, &sk, &sv);
-		if ((curKey % 10000) == 0) {
-			fprintf(stderr,"random write finished %d ops%30s\r", 
-					curKey, 
-					"");
-
-			fflush(stderr);
-		}
+		db_add(dbase, &sk, &sv);
 	}
-	db_close(db);
 
-	//pthread_mutex_unlock(&mtx);
 	retu->found = 0;
 	return retu;
 }
@@ -68,15 +57,14 @@ void* _read_test(void* arg)
 	int found = 0;
 	Variant sk;
 	Variant sv;
-	DB* db;
 	char key[KSIZE + 1];
 	int curKey = loc->curKey;
+	DB* dbase;
+	dbase = loc->db;
 
-	db = db_open(DATAS);
 	for (;curKey < count; curKey++) {
 		memset(key, 0, KSIZE + 1);
 
-		/* if you want to test random write, use the following */
 		if (r)
 			_random_key(key, KSIZE);
 		else
@@ -84,25 +72,15 @@ void* _read_test(void* arg)
 		fprintf(stderr, "%d searching %s\n", curKey, key);
 		sk.length = KSIZE;
 		sk.mem = key;
-		ret = db_get(db, &sk, &sv);
+		ret = db_get(dbase, &sk, &sv);
 		if (ret) {
 			//db_free_data(sv.mem);
 			found++;
 		} else {
 			INFO("not found key#%s", 
 					sk.mem);
-    	}
-
-		if ((curKey % 10000) == 0) {
-			fprintf(stderr,"random read finished %d ops%30s\r", 
-					curKey, 
-					"");
-
-			fflush(stderr);
-		}
+    		}
 	}
-
-	db_close(db);
 
 	retu->count = count;
 	retu->found = found;

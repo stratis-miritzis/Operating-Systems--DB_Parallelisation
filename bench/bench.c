@@ -1,5 +1,8 @@
 #include "bench.h"
+#include "../engine/db.h"
 pthread_mutex_t lock;
+
+#define DATAS ("testdb")
 
 void _random_key(char *key,int length) {
 	int i;
@@ -83,6 +86,8 @@ int main(int argc,char** argv)
 	double cost;
 	long long int start,end;
 
+	DB* db;
+
 	srand(time(NULL));
 	if (argc < 4) {
 		fprintf(stderr,"Usage: db-bench <write | read | readwrite> <count> <threads> <readwrite %c >\n",37);
@@ -104,11 +109,15 @@ int main(int argc,char** argv)
 		int work = count/threadcount;
 		start = get_ustime_sec();
 
+		db = db_open(DATAS);
+
+		arg[0].db = db;
 		arg[0].curKey = 0;
 		arg[0].count = count/threadcount;
 		arg[0].r = r;
 
 		for(i = 1;i < threadcount;i++){
+			arg[i].db = db;
 			arg[i].curKey = i*work;
 			arg[i].count = (i+1)*work;
 			arg[i].r = r;
@@ -119,9 +128,12 @@ int main(int argc,char** argv)
      		for(i = 0;i < threadcount;i++){
             		pthread_join(threads[i],NULL);
 		}
+
 		end = get_ustime_sec();
 		cost = end -start;
 		
+		db_close(db);
+
 		printf(LINE);
 		printf("|Random-Write	(done:%ld): %.6f sec/op; %.1f writes/sec(estimated); cost:%.3f(sec);\n"
 			,count, (double)(cost / count)
@@ -142,17 +154,21 @@ int main(int argc,char** argv)
 		if (argc == 5)
 			r = 1;
 
+		db = db_open(DATAS);
+
 		int work = count/threadcount;
 		start = get_ustime_sec();
 
+		arg[0].db = db;
 		arg[0].curKey = 0;
 		arg[0].count = count/threadcount;
 		arg[0].r = r;
 	
-		pthread_create(&threads[0],NULL,_read_test,(void*)&arg[0]);
-		pthread_join(threads[0],NULL);
+	//	pthread_create(&threads[0],NULL,_read_test,(void*)&arg[0]);
+	//	pthread_join(threads[0],NULL);
 
 		for(i = 1;i < threadcount;i++){
+			arg[i].db = db;
 			arg[i].curKey = i*work;
 			arg[i].count = (i+1)*work;
 			arg[i].r = r;
@@ -165,7 +181,7 @@ int main(int argc,char** argv)
             		cnt += ret->count;
             		found += ret->found;
 		}
-		
+		db_close(db);
 		end = get_ustime_sec();
 		cost = end - start;
 		printf(LINE);
@@ -192,18 +208,21 @@ int main(int argc,char** argv)
 		//printf("%d\n%d\n",work,workr);
 		start = get_ustime_sec();
 
+		db = db_open(DATAS);
+
+
+		arg[0].db = db;
 		arg[0].curKey = 0;
 		arg[0].count = writen;
 		arg[0].r = r;
 
 
-		
+		arg[1].db = db;
 		arg[1].curKey = 0;
 		arg[1].count = workr;
 		arg[1].r = r;
-		pthread_create(&threads[1],NULL,_read_test,(void*)&arg[1]);
+
 		pthread_create(&threads[0],NULL,_write_test,(void*)&arg[0]);
-		pthread_join(threads[1],NULL);
 
 		for(i = 2;i < threadcount;i++){
 			arg[i].curKey = workr*(i-1);
@@ -220,6 +239,7 @@ int main(int argc,char** argv)
 			found += ret->found;
 		}
 
+		db_close(db);
 		end = get_ustime_sec();
 		cost = end - start;
 		printf(LINE);

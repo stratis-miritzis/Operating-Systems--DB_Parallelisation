@@ -6,6 +6,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include "../engine/db.h"
 
 #define KSIZE (16)
 #define VSIZE (1000)
@@ -20,6 +21,7 @@ typedef struct ARGS{
 	long int count;
 	int r;
 	int curKey;
+	DB* db;
 }args;
 
 typedef struct RES{
@@ -28,4 +30,3 @@ typedef struct RES{
 
 void* _write_test(void*);
 void* _read_test(void*);
-pthread_mutex_t mtx;

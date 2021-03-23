@@ -5,8 +5,6 @@
 #include "utils.h"
 #include "log.h"
 
-pthread_mutex_t mtx;
-pthread_mutex_t mtx1;
 
 DB* db_open_ex(const char* basedir, uint64_t cache_size)
 {
@@ -26,13 +24,12 @@ DB* db_open_ex(const char* basedir, uint64_t cache_size)
 
 DB* db_open(const char* basedir)
 {
-    pthread_mutex_lock(&mtx);
     return db_open_ex(basedir, LRU_CACHE_SIZE);
 }
 
 void db_close(DB *self)
 {
-int o = 0;
+    int o = 0;
     INFO("Closing database %d", self->memtable->add_count);
 
     if (self->memtable->list->count > 0)
@@ -51,20 +48,14 @@ int o = 0;
     memtable_free(self->memtable);
 
     free(self);
-
-    if(o==1){
-	pthread_mutex_unlock(&mtx);
-    	//self->sst->sstin = 0;
-    }
 	
     
 }
 
 int db_add(DB* self, Variant* key, Variant* value)
 {
+    pthread_mutex_lock(&mtx);
     int ret;
-    self->sst->sstin = 1;
-   // pthread_mutex_lock(&mtx);
     if (memtable_needs_compaction(self->memtable))
     {
         INFO("Starting compaction of the memtable after %d insertions and %d deletions",
@@ -73,13 +64,12 @@ int db_add(DB* self, Variant* key, Variant* value)
         memtable_reset(self->memtable);
     }
     ret = memtable_add(self->memtable, key, value);
-  //  pthread_mutex_unlock(&mtx);
+    pthread_mutex_unlock(&mtx);
     return ret;
 }
 
 int db_get(DB* self, Variant* key, Variant* value)
 {
-    pthread_mutex_unlock(&mtx);
     if (memtable_get(self->memtable->list, key, value))
         return 1;
 
