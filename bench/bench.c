@@ -164,9 +164,6 @@ int main(int argc,char** argv)
 		arg[0].count = count/threadcount;
 		arg[0].r = r;
 	
-	//	pthread_create(&threads[0],NULL,_read_test,(void*)&arg[0]);
-	//	pthread_join(threads[0],NULL);
-
 		for(i = 1;i < threadcount;i++){
 			arg[i].db = db;
 			arg[i].curKey = i*work;

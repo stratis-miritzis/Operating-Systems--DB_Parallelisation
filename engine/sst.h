@@ -70,7 +70,6 @@ typedef struct _sst {
 
     pthread_t merge_thread;
 #endif
-	int sstin;
 
     // Files in level 0 may overlap regarding ranges, while in upper levels
     // this is not allowed
