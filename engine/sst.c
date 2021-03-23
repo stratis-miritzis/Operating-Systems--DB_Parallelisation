@@ -651,7 +651,12 @@ void sst_merge_real(SST* self, SkipList* list)
 
 int sst_get(SST* self, Variant* key, Variant* value)
 {
+
 #ifdef BACKGROUND_MERGE
+    if(self->wait == 1){
+    	pthread_mutex_unlock(&self->mtx);
+    	self->unlockedbysst = 1;
+    }
     int ret = 0;
 
     pthread_mutex_lock(&self->cv_lock);
@@ -734,7 +739,6 @@ int sst_get(SST* self, Variant* key, Variant* value)
 #ifdef BACKGROUND_MERGE
     pthread_mutex_unlock(&self->lock);
 #endif
-
     return 0;
 }
 

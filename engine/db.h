@@ -11,6 +11,7 @@
 pthread_mutex_t mtx;
 int ret;
 
+
 typedef struct _db {
 //    char basedir[MAX_FILENAME];
     char basedir[MAX_FILENAME+1];

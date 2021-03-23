@@ -75,6 +75,10 @@ typedef struct _sst {
     // this is not allowed
     uint32_t num_files[MAX_LEVELS];
     SSTMetadata** files[MAX_LEVELS];
+    pthread_mutex_t mtx;
+    int wait;
+    int unlockedbysst;
+
 } SST;
 
 SST* sst_new(const char* basedir, uint64_t cache_size);
