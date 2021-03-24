@@ -14,7 +14,13 @@ DB* db_open_ex(const char* basedir, uint64_t cache_size)
 
     strncpy(self->basedir, basedir, MAX_FILENAME);
     self->sst = sst_new(basedir, cache_size);
-    self->sst->wait = 0;
+
+/*sto struct sst exoume valei tria nea orismata (wait,mtx,unlockedbysst) 
+gia na grnwrizei pote kapoio thread perimenei gia na kanei write wste otan to
+thread pou kanei sst_get na tou epitrepsei na synexisei*/
+/*arxikopoioume to wait se 0 kai dinoume sthn sst to mutex*/
+
+    self->sst->wait = 0;        
     self->sst->mtx = mtx;
     self->sst->unlockedbysst = 0;
     Log* log = log_new(self->sst->basedir);
@@ -48,9 +54,9 @@ void db_close(DB *self)
 
 int db_add(DB* self, Variant* key, Variant* value)
 {
-    self->sst->wait = 1;
+    self->sst->wait = 1;                /*dhlwnei oti kapoio thread perimenei*/
     pthread_mutex_lock(&mtx);
-    self->sst->wait = 0;
+    self->sst->wait = 0;                /*den perimenei pia*/
 
     if (memtable_needs_compaction(self->memtable))
     {
@@ -60,7 +66,7 @@ int db_add(DB* self, Variant* key, Variant* value)
         memtable_reset(self->memtable);
     }
     ret = memtable_add(self->memtable, key, value);
-    if(self->sst->unlockedbysst == 0)
+    if(self->sst->unlockedbysst == 0)   /*ama to unlock exei ginei apo kapoio read thread sto sst den 3anakanoume unlock*/
     	pthread_mutex_unlock(&mtx);
     return ret;
 }

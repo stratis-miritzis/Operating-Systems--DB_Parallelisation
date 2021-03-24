@@ -75,7 +75,12 @@ typedef struct _sst {
     // this is not allowed
     uint32_t num_files[MAX_LEVELS];
     SSTMetadata** files[MAX_LEVELS];
-    pthread_mutex_t mtx;
+
+/*ta tria nea orismata (wait,mtx,unlockedbysst) 
+gia na grnwrizei pote kapoio thread perimenei gia na kanei write wste otan to
+thread pou kanei sst_get na tou epitrepsei na synexisei*/
+
+    pthread_mutex_t mtx;    
     int wait;
     int unlockedbysst;
 

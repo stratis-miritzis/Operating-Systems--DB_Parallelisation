@@ -9,8 +9,11 @@
 void* _write_test(void* arg)
 {
 	res* retu;
-	retu = (res*)malloc(sizeof(res));
-	args* loc = (args*)arg;
+	retu = (res*)malloc(sizeof(res));				/*desmeuoume xwro gia to struct retu tipou res pou epistrefoume*/
+
+	/*dhmiourgoume ena antikeimeno args (loc) gia na boresoume na paroume ta orismata apo to void* typou arg*/
+
+	args* loc = (args*)arg;							
 	long int count = loc->count;
 	int r = loc->r;
 	int curKey = loc->curKey;
@@ -48,8 +51,11 @@ void* _write_test(void* arg)
 
 void* _read_test(void* arg)
 {
-	res* retu;
+	res* retu;								/*desmeuoume xwro gia to struct retu tipou res pou epistrefoume*/
 	retu = (res*)malloc(sizeof(res));
+
+	/*dhmiourgoume ena antikeimeno args (loc) gia na boresoume na paroume ta orismata apo to void* typou arg*/
+
 	args* loc = (args*)arg;
 	long int count = loc->count;
 	int r = loc->r;
@@ -85,7 +91,6 @@ void* _read_test(void* arg)
 	retu->count = count;
 	retu->found = found;
 	return retu;
-	free(retu);
 }
 
 

@@ -653,7 +653,7 @@ int sst_get(SST* self, Variant* key, Variant* value)
 {
 
 #ifdef BACKGROUND_MERGE
-    if(self->wait == 1){
+    if(self->wait == 1){                        /*an perimenei na ginei kapoio write to afhnoume epeidh to read diavazei apo to sst opote den 8a yparxei sygroush*/
     	pthread_mutex_unlock(&self->mtx);
     	self->unlockedbysst = 1;
     }

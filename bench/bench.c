@@ -223,38 +223,35 @@ kai an 8a diavasei tyxaia kleidia.*/
 		count = atoi(argv[2]);
 		if (argc == 6)
 			r = 1;
-		threadcount = atoi(argv[3]);
-		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));
-		arg = (args*)malloc(threadcount*sizeof(args));
+		threadcount = atoi(argv[3]);								/*orisma apo grammh entolwn gia to posa threads tha xrhsimopoih8oun*/
+		arg = (args*)malloc(threadcount*sizeof(args));				/*pinakas me antikeimena args(struct ston bench.h) gia ta orismata twn threads*/
+		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));/*pinakas me antikeimena pthread_t*/
 		_print_header(count);
 		_print_environment();
-		int workr = (count*(100-perc)/100)/(threadcount-1);
-		int writen = count*perc/100;
+		int workr = (count*(100-perc)/100)/(threadcount-1);			/*o fortos twn anagnwstwn(count se ka8e thread)*/
+		int writen = count*perc/100;								/*o fortos tou egrafea*/
 
 
 		start = get_ustime_sec();
 
-		db = db_open(DATAS);
+		db = db_open(DATAS);										/*anoigoume-arxikopoioume thn vash dedomenwn*/
 
+
+/*ston pinaka me ta arguments h 8esh 0 einai gia ton egrafea kai oi alles gia tous anagnwstes*/
+/*oi anagnwstes einai sthn 8esh 1-threadcount*/
 
 		arg[0].db = db;
 		arg[0].curKey = 0;
 		arg[0].count = writen;
 		arg[0].r = r;
 
-		arg[1].db = db;
-		arg[1].curKey = 0;
-		arg[1].count = workr;
-		arg[1].r = r;
-
-		for(i = 2;i < threadcount;i++){
+		for(i = 1;i < threadcount;i++){
 			arg[i].db = db;
 			arg[i].curKey = workr*(i-1);
 			arg[i].count = workr*(i-1)+workr;
 			arg[i].r = r;
-		}	
-
-
+		}
+/*dhmiourgoume ta threads*/
 		for(i = 0;i < threadcount;i++){
 			if(i == 0){
 				pthread_create(&threads[i],NULL,_write_test,(void*)&arg[i]);
@@ -262,15 +259,16 @@ kai an 8a diavasei tyxaia kleidia.*/
 				pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
 			}
 		}
-     		for(i = 0;i < threadcount;i++){
-            		pthread_join(threads[i],(void*)&ret);
+/*join gia na teleiwsoun ola mazi*/
+     	for(i = 0;i < threadcount;i++){
+            pthread_join(threads[i],(void*)&ret);
 			found += ret->found;
 		}
 
-		db_close(db);
+		db_close(db);								/*klhnoume thn vash dedomenwn*/
 		end = get_ustime_sec();
 		cost = end - start;
-		printf(LINE);
+		printf(LINE);								/*print olika stats poses egrafes-anagnwseis eginan,egrafes mono,posa vre8hkan*/
 		printf("|Random-ReadWrite	(done:%ld, writen:%d, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%.6f(sec)\n",
 			count,writen,found,
 			(double)(cost / count),
