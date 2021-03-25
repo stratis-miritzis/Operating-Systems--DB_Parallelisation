@@ -66,9 +66,13 @@ int db_add(DB* self, Variant* key, Variant* value)
         memtable_reset(self->memtable);
     }
     ret = memtable_add(self->memtable, key, value);
-    if(self->sst->unlockedbysst == 0)   /*ama to unlock exei ginei apo kapoio read thread sto sst den 3anakanoume unlock*/
-    	pthread_mutex_unlock(&mtx);
+    if(self->sst->unlockedbysst == 1){   /*ama to unlock exei ginei apo kapoio read thread sto sst den 3anakanoume unlock*/
+        self->sst->unlockedbysst = 0;
+        return ret;
+    }
+	pthread_mutex_unlock(&mtx);
     return ret;
+    
 }
 
 int db_get(DB* self, Variant* key, Variant* value)

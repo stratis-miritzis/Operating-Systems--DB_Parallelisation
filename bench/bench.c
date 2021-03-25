@@ -141,8 +141,8 @@ kai an 8a grapsei tyxaia kleidia.*/
 
 /*ta kanoume join wste na teleiwsoun ola mazi */
 
-     		for(i = 0;i < threadcount;i++){
-            		pthread_join(threads[i],NULL);
+     	for(i = 0;i < threadcount;i++){
+            pthread_join(threads[i],NULL);
 		}
 
 		end = get_ustime_sec();
@@ -197,9 +197,9 @@ kai an 8a diavasei tyxaia kleidia.*/
 
 /*ta kanoume join wste na teleiwsoun ola mazi kai au3anoume ton counter found analoga me ta evra8h kleidia*/
 
-     		for(i = 0;i < threadcount;i++){
-            		pthread_join(threads[i],(void*)&ret);
-            		found += ret->found;
+     	for(i = 0;i < threadcount;i++){
+            pthread_join(threads[i],(void*)&ret);
+            found += ret->found;
 		}
 
 		db_close(db);								/*klhnoume thn vash dedomenwn*/
