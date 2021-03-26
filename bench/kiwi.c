@@ -11,7 +11,7 @@ void* _write_test(void* arg)
 	res* retu;
 	retu = (res*)malloc(sizeof(res));				/*desmeuoume xwro gia to struct retu tipou res pou epistrefoume*/
 
-	/*dhmiourgoume ena antikeimeno args (loc) gia na boresoume na paroume ta orismata apo to void* typou arg*/
+	/*dhmiourgoume ena antikeimeno args (loc) gia na mporesoume na paroume ta orismata apo to void* typou arg*/
 
 	args* loc = (args*)arg;							
 	long int count = loc->count;
@@ -54,7 +54,7 @@ void* _read_test(void* arg)
 	res* retu;								/*desmeuoume xwro gia to struct retu tipou res pou epistrefoume*/
 	retu = (res*)malloc(sizeof(res));
 
-	/*dhmiourgoume ena antikeimeno args (loc) gia na boresoume na paroume ta orismata apo to void* typou arg*/
+	/*dhmiourgoume ena antikeimeno args (loc) gia na mporesoume na paroume ta orismata apo to void* typou arg*/
 
 	args* loc = (args*)arg;
 	long int count = loc->count;

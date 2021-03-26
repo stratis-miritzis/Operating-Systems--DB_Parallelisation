@@ -16,13 +16,14 @@ DB* db_open_ex(const char* basedir, uint64_t cache_size)
     self->sst = sst_new(basedir, cache_size);
 
 /*sto struct sst exoume valei tria nea orismata (wait,mtx,unlockedbysst) 
-gia na grnwrizei pote kapoio thread perimenei gia na kanei write wste otan to
+gia na gnwrizei pote kapoio thread perimenei gia na kanei write wste otan to
 thread pou kanei sst_get na tou epitrepsei na synexisei*/
 /*arxikopoioume to wait se 0 kai dinoume sthn sst to mutex*/
 
     self->sst->wait = 0;        
     self->sst->mtx = mtx;
     self->sst->unlockedbysst = 0;
+    
     Log* log = log_new(self->sst->basedir);
     self->memtable = memtable_new(log);
 
@@ -77,11 +78,10 @@ int db_add(DB* self, Variant* key, Variant* value)
 
 int db_get(DB* self, Variant* key, Variant* value)
 {
-    int ret;
     if (memtable_get(self->memtable->list, key, value) == 1)
         return 1;
-    ret = sst_get(self->sst, key, value);
-    return ret;
+    
+    return sst_get(self->sst, key, value);
 }
 
 int db_remove(DB* self, Variant* key)

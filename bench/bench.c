@@ -1,6 +1,6 @@
 #include "bench.h"
 
-#define DATAS ("testdb")  /*to metaferame apo to arxeio kiwi.c gia na ekteloume to db_open,db_close mia fwra xwris ta threads*/
+#define DATAS ("testdb")  /*to metaferame apo to arxeio kiwi.c gia na ekteloume to db_open, db_close mia fora xwris ta threads*/
 
 void _random_key(char *key,int length) {
 	int i;
@@ -91,7 +91,7 @@ int main(int argc,char** argv)
 	double cost;
 	long long int start,end;
 
-	DB* db;				/*to metaferame apo to arxeio kiwi.c gia na ekteloume to db_open,db_close mia fwra xwris ta threads*/
+	DB* db;				/*to metaferame apo to arxeio kiwi.c gia na ekteloume to db_open, db_close mia fora xwris ta threads*/
 
 	srand(time(NULL));
 	if (strcmp(argv[1], "help") == 0){
@@ -104,12 +104,13 @@ int main(int argc,char** argv)
 
 	if (strcmp(argv[1], "write") == 0) {						//write
 		int r = 0;
+        
+        count = atoi(argv[2]);
 		threadcount = atoi(argv[3]);						/*to 3o argument apo to command line gia ton ari8mo twn threads*/
+        
 		arg = (args*)malloc(threadcount*sizeof(args));				/*pinakas me antikeimena args(struct ston bench.h) gia ta orismata twn threads*/
 		threads  = (pthread_t*)malloc((threadcount)*sizeof(pthread_t));		/*pinakas me antikeimena pthread_t*/
 
-
-		count = atoi(argv[2]);
 		_print_header(count);
 		_print_environment();
 		if (argc == 5)
@@ -122,7 +123,7 @@ int main(int argc,char** argv)
 		db = db_open(DATAS);							/*anoigoume-arxikopoioume thn vash dedomenwn*/
 		
 /*arxizoume kai gemizoume ton pinaka me ta orismata poy dinoume sta threads.
-Otan kalloume thn _write_test sto kiwi.c ths dinoume san orisma thn vash 
+Otan kaloume thn _write_test sto kiwi.c ths dinoume san orisma thn vash
 dedomenwn, apo poio kleidi ews poio 8a grapsei ka8e thread (curkey-count),
 kai an 8a grapsei tyxaia kleidia.*/
 
@@ -146,12 +147,10 @@ kai an 8a grapsei tyxaia kleidia.*/
             pthread_join(threads[i],NULL);
 		}
 
-		
 		db_close(db);				/*kleinoume to db*/
 							
-
 		end = get_ustime_sec();
-		cost = (double)(end -start)/1000000;
+		cost = (double)(end - start)/1000000;
 		
 		printf(LINE);				/*print olika stats(ta metaferame apo to kiwi.c) gia na mhn kaleitai apo to ka8e thread*/
 		printf("|Random-Write	(done:%ld): %.6f sec/op; %.1f writes/sec(estimated); cost:%f(sec);\n"
@@ -163,11 +162,13 @@ kai an 8a grapsei tyxaia kleidia.*/
 	} else if (strcmp(argv[1], "read") == 0) {					//read
 
 		int r = 0;
+        
+        count = atoi(argv[2]);
 		threadcount = atoi(argv[3]);						/*orisma apo grammh entolwn gia to posa threads tha xrhsimopoih8oun*/
+        
 		arg = (args*)malloc(threadcount*sizeof(args));				/*pinakas me antikeimena args(struct ston bench.h) gia ta orismata twn threads*/
 		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));		/*pinakas me antikeimena pthread_t*/
 
-		count = atoi(argv[2]);
 		_print_header(count);
 		_print_environment();
 		if (argc == 5)
@@ -176,11 +177,10 @@ kai an 8a grapsei tyxaia kleidia.*/
 		int work = count/threadcount;						/*ypologizoume ton forto(posa reads) tou ka8e thread*/
 		db = db_open(DATAS);							/*anoigoume-arxikopoioume thn vash dedomenwn*/
 
-
 		start = get_ustime_sec();
 
 /*arxizoume kai gemizoume ton pinaka me ta orismata poy dinoume sta threads.
-Otan kalloume thn _read_test sto kiwi.c ths dinoume san orisma thn vash 
+Otan kaloume thn _read_test sto kiwi.c ths dinoume san orisma thn vash
 dedomenwn, apo poio kleidi ews poio 8a diavasei ka8e thread (curKey-count),
 kai an 8a diavasei tyxaia kleidia.*/
 
@@ -198,16 +198,18 @@ kai an 8a diavasei tyxaia kleidia.*/
 			pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
 		}
 
-/*ta kanoume join wste na teleiwsoun ola mazi kai au3anoume ton counter found analoga me ta evra8h kleidia*/
+/*ta kanoume join wste na teleiwsoun ola mazi kai au3anoume ton counter found analoga me ta kleidia pou vrethikan*/
 
      	for(i = 0;i < threadcount;i++){
             pthread_join(threads[i],(void*)&ret);
             found += ret->found;
 		}
 
-		db_close(db);								/*klhnoume thn vash dedomenwn*/
+		db_close(db);								/*kleinoume thn vash dedomenwn*/
+        
 		end = get_ustime_sec();
-		cost = (double)(end -start)/1000000;							
+		cost = (double)(end - start)/1000000;
+        
 		printf(LINE);								/*print olika stats(ta metaferame apo to kiwi.c) gia na mhn kaleitai apo to ka8e thread*/
 		printf("|Random-Read	(done:%ld, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%f(sec)\n",
 			count, found,
@@ -222,11 +224,14 @@ kai an 8a diavasei tyxaia kleidia.*/
 			exit(1);
 		}
 		int r = 0;
-		int perc = atoi(argv[4]);									/*pososto egrafwn/anagnwsewn. 100 = mono egrafes, 0 = mono anagnwseis*/
+        
 		count = atoi(argv[2]);
+        threadcount = atoi(argv[3]);                                /*orisma apo grammh entolwn gia to posa threads tha xrhsimopoih8oun*/
+        int perc = atoi(argv[4]);                                    /*pososto egrafwn/anagnwsewn. 100 = mono egrafes, 0 = mono anagnwseis*/
+        
 		if (argc == 6)
 			r = 1;
-		threadcount = atoi(argv[3]);								/*orisma apo grammh entolwn gia to posa threads tha xrhsimopoih8oun*/
+
 		arg = (args*)malloc(threadcount*sizeof(args));				/*pinakas me antikeimena args(struct ston bench.h) gia ta orismata twn threads*/
 		threads  = (pthread_t*)malloc(threadcount*sizeof(pthread_t));/*pinakas me antikeimena pthread_t*/
 		_print_header(count);
@@ -255,6 +260,7 @@ kai an 8a diavasei tyxaia kleidia.*/
 			arg[i].r = r;
 		}
 		arg[threadcount-1].count = count-arg[0].count;
+        
 /*dhmiourgoume ta threads*/
 		for(i = 0;i < threadcount;i++){
 			if(i == 0){
@@ -263,15 +269,18 @@ kai an 8a diavasei tyxaia kleidia.*/
 				pthread_create(&threads[i],NULL,_read_test,(void*)&arg[i]);
 			}
 		}
+        
 /*join gia na teleiwsoun ola mazi*/
      	for(i = 0;i < threadcount;i++){
             pthread_join(threads[i],(void*)&ret);
 			found += ret->found;
 		}
 
-		db_close(db);								/*klhnoume thn vash dedomenwn*/
+		db_close(db);								/*kleinoume thn vash dedomenwn*/
+        
 		end = get_ustime_sec();
 		cost = (double)(end -start)/1000000;
+        
 		printf(LINE);								/*print olika stats poses egrafes-anagnwseis eginan,egrafes mono,posa vre8hkan*/
 		printf("|Random-ReadWrite	(done:%ld, writen:%d, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%f(sec)\n",
 			count,writen,found,
