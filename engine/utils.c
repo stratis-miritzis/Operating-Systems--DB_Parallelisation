@@ -150,7 +150,7 @@ long long get_ustime_sec(void)
     gettimeofday(&tv, NULL);
     ust = ((long long)tv.tv_sec)*1000000;
     ust += tv.tv_usec;
-    return ust / 1000000;
+    return ust;
 }
 
 void int3(void)
