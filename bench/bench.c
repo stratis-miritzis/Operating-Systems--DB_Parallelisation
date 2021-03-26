@@ -132,6 +132,7 @@ kai an 8a grapsei tyxaia kleidia.*/
 			arg[i].count = (i+1)*work;
 			arg[i].r = r;
 		}
+		arg[threadcount-1].count = count;
 
 /*apo8hkeuoume ta threads ston pinaka antikeimenwn pthread_t kai dinoume orismata apo ton pinaka arg pou ta kanoume cast se typo void*/
 
@@ -145,14 +146,15 @@ kai an 8a grapsei tyxaia kleidia.*/
             pthread_join(threads[i],NULL);
 		}
 
-		end = get_ustime_sec();
-		cost = end -start;
 		
 		db_close(db);				/*kleinoume to db*/
-							/*print olika stats(ta metaferame apo to kiwi.c) gia na mhn kaleitai apo to ka8e thread*/
+							
 
-		printf(LINE);
-		printf("|Random-Write	(done:%ld): %.6f sec/op; %.1f writes/sec(estimated); cost:%.3f(sec);\n"
+		end = get_ustime_sec();
+		cost = (double)(end -start)/1000000;
+		
+		printf(LINE);				/*print olika stats(ta metaferame apo to kiwi.c) gia na mhn kaleitai apo to ka8e thread*/
+		printf("|Random-Write	(done:%ld): %.6f sec/op; %.1f writes/sec(estimated); cost:%f(sec);\n"
 			,count, (double)(cost / count)
 			,(double)(count / cost)
 			,cost);	
@@ -188,6 +190,7 @@ kai an 8a diavasei tyxaia kleidia.*/
 			arg[i].count = (i+1)*work;
 			arg[i].r = r;
 		}
+		arg[threadcount-1].count = count;
 
 /*apo8hkeuoume ta threads ston pinaka antikeimenwn pthread_t kai dinoume orismata apo ton pinaka arg pou ta kanoume cast se typo void*/
 
@@ -204,9 +207,9 @@ kai an 8a diavasei tyxaia kleidia.*/
 
 		db_close(db);								/*klhnoume thn vash dedomenwn*/
 		end = get_ustime_sec();
-		cost = end - start;							/*print olika stats(ta metaferame apo to kiwi.c) gia na mhn kaleitai apo to ka8e thread*/
-		printf(LINE);	
-		printf("|Random-Read	(done:%ld, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%.6f(sec)\n",
+		cost = (double)(end -start)/1000000;							
+		printf(LINE);								/*print olika stats(ta metaferame apo to kiwi.c) gia na mhn kaleitai apo to ka8e thread*/
+		printf("|Random-Read	(done:%ld, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%f(sec)\n",
 			count, found,
 			(double)(cost / count),
 			(double)(count / cost),
@@ -251,6 +254,7 @@ kai an 8a diavasei tyxaia kleidia.*/
 			arg[i].count = workr*(i-1)+workr;
 			arg[i].r = r;
 		}
+		arg[threadcount-1].count = count-arg[0].count;
 /*dhmiourgoume ta threads*/
 		for(i = 0;i < threadcount;i++){
 			if(i == 0){
@@ -267,9 +271,9 @@ kai an 8a diavasei tyxaia kleidia.*/
 
 		db_close(db);								/*klhnoume thn vash dedomenwn*/
 		end = get_ustime_sec();
-		cost = end - start;
+		cost = (double)(end -start)/1000000;
 		printf(LINE);								/*print olika stats poses egrafes-anagnwseis eginan,egrafes mono,posa vre8hkan*/
-		printf("|Random-ReadWrite	(done:%ld, writen:%d, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%.6f(sec)\n",
+		printf("|Random-ReadWrite	(done:%ld, writen:%d, found:%d): %.6f sec/op; %.1f reads /sec(estimated); cost:%f(sec)\n",
 			count,writen,found,
 			(double)(cost / count),
 			(double)(count / cost),
