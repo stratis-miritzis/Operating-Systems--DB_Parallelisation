@@ -19,7 +19,7 @@ DB* db_open_ex(const char* basedir, uint64_t cache_size)
 gia na gnwrizei pote kapoio thread perimenei gia na kanei write wste otan to
 thread pou kanei sst_get na tou epitrepsei na synexisei*/
 /*arxikopoioume to wait se 0 kai dinoume sthn sst to mutex*/
-
+    self->egan = 0;
     self->sst->wait = 0;        
     self->sst->mtx = mtx;
     self->sst->unlockedbysst = 0;
@@ -78,10 +78,18 @@ int db_add(DB* self, Variant* key, Variant* value)
 
 int db_get(DB* self, Variant* key, Variant* value)
 {
+    if(self->sst->wait == 1){
+        pthread_mutex_lock(&mtxegan);
+        self->egan = 1;
+    }
+    int ret = sst_get(self->sst, key, value);
     if (memtable_get(self->memtable->list, key, value) == 1)
         return 1;
-    
-    return sst_get(self->sst, key, value);
+    if(self->egan == 1){
+        pthread_mutex_unlock(&mtxegan);
+        self->egan = 0;
+    }
+    return ret;
 }
 
 int db_remove(DB* self, Variant* key)

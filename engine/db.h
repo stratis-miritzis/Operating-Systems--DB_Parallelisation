@@ -9,6 +9,7 @@
 #include "pthread.h"
 
 pthread_mutex_t mtx;        /*orizoume to mutex gia ta locks*/
+pthread_mutex_t mtxegan;
 int ret;
 
 
@@ -17,6 +18,7 @@ typedef struct _db {
     char basedir[MAX_FILENAME+1];
     SST* sst;
     MemTable* memtable;
+    int egan;
 } DB;
 
 DB* db_open(const char *basedir);
